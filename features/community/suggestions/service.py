@@ -1,83 +1,12 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
-import pdb
-import aiohttp
-
-import hashlib
-import hmac
-import base64
-import time
-
-import aiohttp
 
 from db.sqlite import execute, executeReturnId, fetchAll, fetchOne
 
-_httpSession: Optional[aiohttp.ClientSession] = None
 
 def _normalizeText(value: object) -> str:
     return str(value or "").strip()
-
-async def _getHttpSession() -> aiohttp.ClientSession:
-    global _httpSession
-    if _httpSession is None or _httpSession.closed:
-        timeout = aiohttp.ClientTimeout(total=10)
-        _httpSession = aiohttp.ClientSession(timeout=timeout)
-    return _httpSession
-
-
-
-def make_digest(message, key):
-    
-    key = bytes(key, 'UTF-8')
-    message = bytes(message, 'UTF-8')
-    
-    digester = hmac.new(key, message, hashlib.sha1)
-    signature1 = digester.digest() 
-    
-    return signature1.hex()
-
-
-async def addSuggestionToFreedcamp(
-    *,
-    suggestionId: int,
-    submitterName: str,
-    content: str,
-    apiKey: str,
-    keySecret: str,
-    projectId: int,
-    taskGroupId: int,
-) -> int:
-    
-    session = await _getHttpSession()
-    ts = str(int(1000*time.time()))
-    toHash = apiKey + ts
-    keyHash = make_digest(toHash, keySecret)
-    data = {
-        "api_key": apiKey,
-        "timestamp": ts,
-        "hash": keyHash,
-    }
-    json = {
-        "project_id": projectId,
-        "task_group_id": taskGroupId,
-        "title": f"Suggestion #{suggestionId} from User {submitterName}",
-        "description": content,
-        "priority": 0,
-        "assigned_to_id": 0,
-    }
-    headers = {"Content-Type": "application/json"}
-    async with session.post(
-        "https://freedcamp.com/api/v1/tasks/",
-        json=json,
-        headers=headers,
-        params=data,
-    ) as response:
-        if response.status != 200:
-            raise Exception(f"Freedcamp API request failed with status {response.status}: {response.reason}")
-        responseObj = await response.json()
-        return responseObj.get("data").get("tasks")[0].get("id")
 
 
 async def createSuggestion(
@@ -131,16 +60,6 @@ async def setSuggestionThreadId(suggestionId: int, threadId: int) -> None:
         WHERE suggestionId = ?
         """,
         (int(threadId), int(suggestionId)),
-    )
-
-async def setSuggestionFreedcampId(suggestionId: int, freedcampId: int) -> None:
-    await execute(
-        """
-        UPDATE suggestions
-        SET freedcampId = ?, updatedAt = datetime('now')
-        WHERE suggestionId = ?
-        """,
-        (int(freedcampId), int(suggestionId)),
     )
 
 

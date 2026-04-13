@@ -245,6 +245,7 @@ async def ensureBgReviewBuckets(
                 configModule=config,
                 resolveOrbatAgeGroup=_resolveOrbatAgeGroupForUser,
                 userId=userId,
+                guildId=int(getattr(sourceGuild, "id", 0) or 0),
             )
             reviewBucketsByUserId[userId] = bucket
         bucketCounts[bucket] = bucketCounts.get(bucket, 0) + 1
