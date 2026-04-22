@@ -1,3 +1,5 @@
+# Reaction roles by idkpine
+
 import aiosqlite
 import asyncio
 import logging
