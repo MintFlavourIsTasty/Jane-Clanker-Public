@@ -1,3 +1,4 @@
+# Credit to MintFlavour(@koni_mint)
 from __future__ import annotations
 from typing import Any
 import discord
