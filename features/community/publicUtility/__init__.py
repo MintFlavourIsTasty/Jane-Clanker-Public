@@ -1,3 +1,5 @@
+# Reaction roles by idkpine
+
 from .buttonRoles import (
     ButtonRoleView,
     addBlockedSelfRole,
